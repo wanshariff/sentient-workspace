@@ -2,6 +2,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { Database } from '@/integrations/supabase/types';
+
+// Use proper database types
+type ProjectStatus = Database['public']['Enums']['project_status'];
+type ArtifactType = Database['public']['Enums']['artifact_type'];
+type TaskStatus = Database['public']['Enums']['task_status'];
+type TaskPriority = Database['public']['Enums']['task_priority'];
 
 export interface Workspace {
   id: string;
@@ -18,7 +25,7 @@ export interface Project {
   workspace_id: string;
   name: string;
   description: string | null;
-  status: string;
+  status: ProjectStatus;
   created_at: string;
   updated_at: string;
   created_by: string | null;
@@ -29,7 +36,7 @@ export interface Artifact {
   project_id: string;
   name: string;
   description: string | null;
-  type: string;
+  type: ArtifactType;
   content: any;
   version: number;
   created_at: string;
@@ -42,8 +49,8 @@ export interface Task {
   project_id: string;
   title: string;
   description: string | null;
-  status: string;
-  priority: string;
+  status: TaskStatus;
+  priority: TaskPriority;
   assigned_to: string | null;
   due_date: string | null;
   created_at: string;
@@ -181,11 +188,11 @@ export const useCreateProject = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ workspaceId, name, description, status }: { 
+    mutationFn: async ({ workspaceId, name, description, status = 'active' }: { 
       workspaceId: string; 
       name: string; 
       description?: string; 
-      status?: string; 
+      status?: ProjectStatus; 
     }) => {
       const { data, error } = await supabase
         .from('projects')
@@ -213,11 +220,11 @@ export const useCreateArtifact = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ projectId, name, description, type, content }: { 
+    mutationFn: async ({ projectId, name, description, type = 'document', content }: { 
       projectId: string; 
       name: string; 
       description?: string; 
-      type?: string;
+      type?: ArtifactType;
       content?: any;
     }) => {
       const { data, error } = await supabase
@@ -246,7 +253,7 @@ export const useUpdateArtifact = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Artifact> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Omit<Artifact, 'id' | 'created_at' | 'updated_at'>> }) => {
       const { data, error } = await supabase
         .from('artifacts')
         .update(updates)
@@ -268,12 +275,12 @@ export const useCreateTask = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ projectId, title, description, status, priority }: { 
+    mutationFn: async ({ projectId, title, description, status = 'todo', priority = 'medium' }: { 
       projectId: string; 
       title: string; 
       description?: string; 
-      status?: string;
-      priority?: string;
+      status?: TaskStatus;
+      priority?: TaskPriority;
     }) => {
       const { data, error } = await supabase
         .from('tasks')
@@ -301,7 +308,7 @@ export const useUpdateTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Task> }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Omit<Task, 'id' | 'created_at' | 'updated_at'>> }) => {
       const { data, error } = await supabase
         .from('tasks')
         .update(updates)

@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -305,7 +304,10 @@ export function ArtifactEditor({ projectId, artifactId, onArtifactSelect }: Arti
                     <div>
                       <Label className="text-sm font-medium text-muted-foreground">Type</Label>
                       <div className="flex items-center gap-2 mt-1">
-                        {React.createElement(artifactTypeIcons[selectedArtifact.type as keyof typeof artifactTypeIcons] || FileIcon, { className: "h-4 w-4" })}
+                        {(() => {
+                          const IconComponent = artifactTypeIcons[selectedArtifact.type as keyof typeof artifactTypeIcons] || FileIcon;
+                          return <IconComponent className="h-4 w-4" />;
+                        })()}
                         <Badge variant="outline">{selectedArtifact.type}</Badge>
                       </div>
                     </div>
