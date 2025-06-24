@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,9 +17,16 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect to dashboard if user is already authenticated
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +45,7 @@ const Auth = () => {
         title: "Welcome back!",
         description: "You have successfully signed in."
       });
-      navigate('/');
+      navigate('/', { replace: true });
     }
 
     setIsLoading(false);
@@ -81,6 +88,15 @@ const Auth = () => {
     }
     // Note: If successful, the user will be redirected, so we don't need to handle success here
   };
+
+  // Show loading spinner while checking authentication state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
