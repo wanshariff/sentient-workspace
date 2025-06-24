@@ -1,5 +1,5 @@
 
-import { Calendar, Home, Kanban, List, Plus, Search, Settings } from "lucide-react";
+import { Home, FileText, Kanban, Calendar, Settings } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,10 +13,11 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
+import { WorkspaceSelector } from "./WorkspaceSelector";
+import { ProjectList } from "./ProjectList";
 import { ViewType } from "@/pages/Index";
-import { WorkspaceSelector } from "@/components/WorkspaceSelector";
-import { ProjectList } from "@/components/ProjectList";
+import { CreateProjectDialog } from "./CreateProjectDialog";
+import { Button } from "@/components/ui/button";
 
 interface AppSidebarProps {
   currentView: ViewType;
@@ -30,62 +31,50 @@ interface AppSidebarProps {
 const navigationItems = [
   {
     title: "Dashboard",
-    url: "#",
+    url: "dashboard",
     icon: Home,
-    view: "dashboard" as ViewType,
   },
   {
     title: "Artifacts",
-    url: "#",
-    icon: List,
-    view: "artifacts" as ViewType,
+    url: "artifacts",
+    icon: FileText,
   },
   {
     title: "Board",
-    url: "#",
+    url: "board",
     icon: Kanban,
-    view: "board" as ViewType,
   },
   {
     title: "Calendar",
-    url: "#",
+    url: "calendar",
     icon: Calendar,
-    view: "calendar" as ViewType,
   },
 ];
 
-export function AppSidebar({ 
-  currentView, 
-  onViewChange, 
-  selectedWorkspace, 
+export function AppSidebar({
+  currentView,
+  onViewChange,
+  selectedWorkspace,
   onWorkspaceChange,
   selectedProject,
-  onProjectSelect 
+  onProjectSelect,
 }: AppSidebarProps) {
   return (
-    <Sidebar>
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">SW</span>
-          </div>
-          <span className="font-semibold text-lg">Sentient Workspace</span>
+    <Sidebar variant="inset">
+      <SidebarHeader>
+        <div className="p-2">
+          <h2 className="text-lg font-semibold">Sentient Workspace</h2>
+        </div>
+        <SidebarSeparator />
+        <div className="p-2">
+          <WorkspaceSelector
+            selectedWorkspace={selectedWorkspace}
+            onWorkspaceChange={onWorkspaceChange}
+          />
         </div>
       </SidebarHeader>
-
+      
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <WorkspaceSelector 
-              selectedWorkspace={selectedWorkspace}
-              onWorkspaceChange={onWorkspaceChange}
-            />
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator />
-
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -93,10 +82,10 @@ export function AppSidebar({
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
-                    isActive={currentView === item.view}
-                    onClick={() => onViewChange(item.view)}
+                    isActive={currentView === item.url}
+                    onClick={() => onViewChange(item.url as ViewType)}
                   >
-                    <item.icon />
+                    <item.icon className="h-4 w-4" />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -108,27 +97,36 @@ export function AppSidebar({
         <SidebarSeparator />
 
         <SidebarGroup>
-          <div className="flex items-center justify-between">
-            <SidebarGroupLabel>Projects</SidebarGroupLabel>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
+          <SidebarGroupLabel className="flex items-center justify-between">
+            Projects
+            {selectedWorkspace && (
+              <CreateProjectDialog 
+                workspaceId={selectedWorkspace}
+                trigger={<Button variant="ghost" size="sm" className="h-6 w-6 p-0">+</Button>}
+              />
+            )}
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <ProjectList 
-              workspaceId={selectedWorkspace}
-              selectedProject={selectedProject}
-              onProjectSelect={onProjectSelect}
-            />
+            {selectedWorkspace ? (
+              <ProjectList
+                workspaceId={selectedWorkspace}
+                selectedProject={selectedProject}
+                onProjectSelect={onProjectSelect}
+              />
+            ) : (
+              <div className="p-3 text-sm text-muted-foreground text-center">
+                Select a workspace to view projects
+              </div>
+            )}
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
+      <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton>
-              <Settings />
+              <Settings className="h-4 w-4" />
               <span>Settings</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

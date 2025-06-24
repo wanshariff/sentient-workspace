@@ -2,12 +2,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { ViewType } from "@/pages/Index";
 import { Plus, Users, Calendar, TrendingUp } from "lucide-react";
 import { useProjects } from "@/hooks/useWorkspaces";
 import { useAuth } from "@/contexts/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CreateProjectDialog } from "./CreateProjectDialog";
 
 interface DashboardProps {
   selectedWorkspace: string;
@@ -50,10 +50,9 @@ export function Dashboard({ selectedWorkspace, onProjectSelect, onViewChange }: 
           <h1 className="text-3xl font-bold">Welcome back, {user?.user_metadata?.full_name || user?.email}</h1>
           <p className="text-muted-foreground">Here's what's happening with your workspace today.</p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          New Project
-        </Button>
+        {selectedWorkspace && (
+          <CreateProjectDialog workspaceId={selectedWorkspace} />
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -116,10 +115,17 @@ export function Dashboard({ selectedWorkspace, onProjectSelect, onViewChange }: 
             {projects.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">No projects yet.</p>
-                <Button className="mt-4">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Project
-                </Button>
+                {selectedWorkspace && (
+                  <CreateProjectDialog 
+                    workspaceId={selectedWorkspace}
+                    trigger={
+                      <Button className="mt-4">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Your First Project
+                      </Button>
+                    }
+                  />
+                )}
               </div>
             ) : (
               projects.slice(0, 5).map((project) => (
