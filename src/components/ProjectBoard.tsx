@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,16 +11,20 @@ import { useTasks, useCreateTask, useUpdateTask } from "@/hooks/useWorkspaces";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Calendar, User, Flag, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Database } from '@/integrations/supabase/types';
+
+type TaskStatus = Database['public']['Enums']['task_status'];
+type TaskPriority = Database['public']['Enums']['task_priority'];
 
 interface ProjectBoardProps {
   projectId: string | null;
 }
 
 const taskColumns = [
-  { id: 'todo', title: 'To Do', color: 'bg-gray-100' },
-  { id: 'in_progress', title: 'In Progress', color: 'bg-blue-100' },
-  { id: 'review', title: 'Review', color: 'bg-yellow-100' },
-  { id: 'done', title: 'Done', color: 'bg-green-100' },
+  { id: 'todo' as TaskStatus, title: 'To Do', color: 'bg-gray-100' },
+  { id: 'in_progress' as TaskStatus, title: 'In Progress', color: 'bg-blue-100' },
+  { id: 'review' as TaskStatus, title: 'Review', color: 'bg-yellow-100' },
+  { id: 'done' as TaskStatus, title: 'Done', color: 'bg-green-100' },
 ];
 
 const priorityColors = {
@@ -35,7 +38,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
-  const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
+  const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority>('medium');
 
   const { data: tasks = [], isLoading } = useTasks(projectId || undefined);
   const { mutate: createTask, isPending: isCreating } = useCreateTask();
@@ -76,7 +79,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
     );
   };
 
-  const handleTaskStatusChange = (taskId: string, newStatus: string) => {
+  const handleTaskStatusChange = (taskId: string, newStatus: TaskStatus) => {
     updateTask(
       { id: taskId, updates: { status: newStatus } },
       {
@@ -168,7 +171,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="priority">Priority</Label>
-                  <Select value={newTaskPriority} onValueChange={(value: any) => setNewTaskPriority(value)}>
+                  <Select value={newTaskPriority} onValueChange={(value: TaskPriority) => setNewTaskPriority(value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -226,7 +229,7 @@ export function ProjectBoard({ projectId }: ProjectBoardProps) {
                         
                         <Select 
                           value={task.status} 
-                          onValueChange={(value) => handleTaskStatusChange(task.id, value)}
+                          onValueChange={(value: TaskStatus) => handleTaskStatusChange(task.id, value)}
                         >
                           <SelectTrigger className="w-auto h-6 text-xs">
                             <SelectValue />
