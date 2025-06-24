@@ -1,5 +1,5 @@
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -16,22 +16,23 @@ import {
 } from "@/components/ui/popover";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useWorkspaces } from "@/hooks/useWorkspaces";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface WorkspaceSelectorProps {
   selectedWorkspace: string;
   onWorkspaceChange: (workspace: string) => void;
 }
 
-const workspaces = [
-  { id: "workspace-1", name: "Product Team", role: "Admin" },
-  { id: "workspace-2", name: "Design System", role: "Member" },
-  { id: "workspace-3", name: "Research Lab", role: "Viewer" },
-];
-
 export function WorkspaceSelector({ selectedWorkspace, onWorkspaceChange }: WorkspaceSelectorProps) {
   const [open, setOpen] = useState(false);
+  const { data: workspaces = [], isLoading } = useWorkspaces();
 
   const selectedWorkspaceData = workspaces.find(w => w.id === selectedWorkspace);
+
+  if (isLoading) {
+    return <Skeleton className="h-16 w-full" />;
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -43,8 +44,8 @@ export function WorkspaceSelector({ selectedWorkspace, onWorkspaceChange }: Work
           className="w-full justify-between"
         >
           <div className="flex flex-col items-start">
-            <span className="font-medium">{selectedWorkspaceData?.name}</span>
-            <span className="text-xs text-muted-foreground">{selectedWorkspaceData?.role}</span>
+            <span className="font-medium">{selectedWorkspaceData?.name || 'Select workspace'}</span>
+            <span className="text-xs text-muted-foreground">{selectedWorkspaceData?.role || ''}</span>
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>

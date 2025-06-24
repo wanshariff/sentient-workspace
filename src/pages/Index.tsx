@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarInset } from "@/components/ui/sidebar";
@@ -7,14 +7,24 @@ import { Header } from "@/components/Header";
 import { Dashboard } from "@/components/Dashboard";
 import { ArtifactEditor } from "@/components/ArtifactEditor";
 import { ProjectBoard } from "@/components/ProjectBoard";
+import { useWorkspaces } from "@/hooks/useWorkspaces";
 
 export type ViewType = 'dashboard' | 'artifacts' | 'board' | 'calendar';
 
 const Index = () => {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
-  const [selectedWorkspace, setSelectedWorkspace] = useState('workspace-1');
+  const [selectedWorkspace, setSelectedWorkspace] = useState('');
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [selectedArtifact, setSelectedArtifact] = useState<string | null>(null);
+  
+  const { data: workspaces = [] } = useWorkspaces();
+
+  // Set the first workspace as default when workspaces load
+  useEffect(() => {
+    if (workspaces.length > 0 && !selectedWorkspace) {
+      setSelectedWorkspace(workspaces[0].id);
+    }
+  }, [workspaces, selectedWorkspace]);
 
   const renderMainContent = () => {
     switch (currentView) {

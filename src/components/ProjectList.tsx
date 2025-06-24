@@ -2,6 +2,8 @@
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Folder, FolderOpen } from "lucide-react";
+import { useProjects } from "@/hooks/useWorkspaces";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProjectListProps {
   workspaceId: string;
@@ -9,21 +11,41 @@ interface ProjectListProps {
   onProjectSelect: (project: string | null) => void;
 }
 
-const projects = [
-  { id: "project-1", name: "Product Alpha", status: "active", artifacts: 12 },
-  { id: "project-2", name: "Mobile Redesign", status: "planning", artifacts: 8 },
-  { id: "project-3", name: "User Onboarding", status: "completed", artifacts: 15 },
-];
-
 export function ProjectList({ workspaceId, selectedProject, onProjectSelect }: ProjectListProps) {
+  const { data: projects = [], isLoading } = useProjects(workspaceId);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
-      case 'planning': return 'bg-yellow-100 text-yellow-800';
-      case 'completed': return 'bg-gray-100 text-gray-800';
+      case 'draft': return 'bg-yellow-100 text-yellow-800';
+      case 'archived': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (isLoading) {
+    return (
+      <SidebarMenu>
+        {[1, 2, 3].map((i) => (
+          <SidebarMenuItem key={i}>
+            <Skeleton className="h-16 w-full" />
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    );
+  }
+
+  if (projects.length === 0) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <div className="p-3 text-sm text-muted-foreground text-center">
+            No projects yet. Create your first project!
+          </div>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
 
   return (
     <SidebarMenu>
@@ -46,7 +68,7 @@ export function ProjectList({ workspaceId, selectedProject, onProjectSelect }: P
                 {project.status}
               </Badge>
               <span className="text-muted-foreground">
-                {project.artifacts} artifacts
+                {project.description || 'No description'}
               </span>
             </div>
           </SidebarMenuButton>

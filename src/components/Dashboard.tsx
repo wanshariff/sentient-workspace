@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ViewType } from "@/pages/Index";
 import { Plus, Users, Calendar, TrendingUp } from "lucide-react";
+import { useProjects } from "@/hooks/useWorkspaces";
+import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardProps {
   selectedWorkspace: string;
@@ -13,25 +16,39 @@ interface DashboardProps {
 }
 
 export function Dashboard({ selectedWorkspace, onProjectSelect, onViewChange }: DashboardProps) {
-  const recentProjects = [
-    { id: "project-1", name: "Product Alpha", progress: 75, lastUpdated: "2 hours ago", team: 5 },
-    { id: "project-2", name: "Mobile Redesign", progress: 40, lastUpdated: "1 day ago", team: 3 },
-    { id: "project-3", name: "User Onboarding", progress: 100, lastUpdated: "3 days ago", team: 4 },
-  ];
+  const { user } = useAuth();
+  const { data: projects = [], isLoading } = useProjects(selectedWorkspace);
 
-  const recentArtifacts = [
-    { id: "art-1", name: "Product Requirements Document", type: "PRD", project: "Product Alpha", updated: "1 hour ago" },
-    { id: "art-2", name: "User Personas", type: "Personas", project: "Mobile Redesign", updated: "3 hours ago" },
-    { id: "art-3", name: "Feature Specifications", type: "Features", project: "Product Alpha", updated: "5 hours ago" },
-  ];
+  const activeProjects = projects.filter(p => p.status === 'active');
+  const completedProjects = projects.filter(p => p.status === 'archived');
+
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-8 w-64 mb-2" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
       {/* Welcome Section */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Welcome back, Priya</h1>
-          <p className="text-muted-foreground">Here's what's happening with your product team today.</p>
+          <h1 className="text-3xl font-bold">Welcome back, {user?.user_metadata?.full_name || user?.email}</h1>
+          <p className="text-muted-foreground">Here's what's happening with your workspace today.</p>
         </div>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
@@ -47,41 +64,43 @@ export function Dashboard({ selectedWorkspace, onProjectSelect, onViewChange }: 
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-muted-foreground">+1 from last month</p>
+            <div className="text-2xl font-bold">{activeProjects.length}</div>
+            <p className="text-xs text-muted-foreground">Currently in progress</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Artifacts</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">35</div>
-            <p className="text-xs text-muted-foreground">+12 this week</p>
+            <div className="text-2xl font-bold">{projects.length}</div>
+            <p className="text-xs text-muted-foreground">All time</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Team Members</CardTitle>
+            <CardTitle className="text-sm font-medium">Completed</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">Across all projects</p>
+            <div className="text-2xl font-bold">{completedProjects.length}</div>
+            <p className="text-xs text-muted-foreground">Successfully finished</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">68%</div>
-            <p className="text-xs text-muted-foreground">+5% from last week</p>
+            <div className="text-2xl font-bold">
+              {projects.length > 0 ? Math.round((completedProjects.length / projects.length) * 100) : 0}%
+            </div>
+            <p className="text-xs text-muted-foreground">Project completion rate</p>
           </CardContent>
         </Card>
       </div>
@@ -94,51 +113,58 @@ export function Dashboard({ selectedWorkspace, onProjectSelect, onViewChange }: 
             <CardDescription>Projects you've been working on</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentProjects.map((project) => (
-              <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                   onClick={() => {
-                     onProjectSelect(project.id);
-                     onViewChange('board');
-                   }}>
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium">{project.name}</p>
-                    <Badge variant="outline" className="text-xs">
-                      <Users className="h-3 w-3 mr-1" />
-                      {project.team}
-                    </Badge>
-                  </div>
-                  <Progress value={project.progress} className="h-2" />
-                  <p className="text-xs text-muted-foreground">Updated {project.lastUpdated}</p>
-                </div>
-                <div className="text-sm font-medium ml-4">{project.progress}%</div>
+            {projects.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No projects yet.</p>
+                <Button className="mt-4">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Your First Project
+                </Button>
               </div>
-            ))}
+            ) : (
+              projects.slice(0, 5).map((project) => (
+                <div key={project.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                     onClick={() => {
+                       onProjectSelect(project.id);
+                       onViewChange('board');
+                     }}>
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{project.name}</p>
+                      <Badge variant="outline" className="text-xs">
+                        {project.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{project.description || 'No description'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Created {new Date(project.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
 
-        {/* Recent Artifacts */}
+        {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Artifacts</CardTitle>
-            <CardDescription>Recently updated documents and artifacts</CardDescription>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Get started with your workspace</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentArtifacts.map((artifact) => (
-              <div key={artifact.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                   onClick={() => onViewChange('artifacts')}>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-medium">{artifact.name}</p>
-                    <Badge variant="secondary" className="text-xs">
-                      {artifact.type}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{artifact.project}</p>
-                  <p className="text-xs text-muted-foreground">Updated {artifact.updated}</p>
-                </div>
-              </div>
-            ))}
+            <Button variant="outline" className="w-full justify-start" onClick={() => onViewChange('artifacts')}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create New Artifact
+            </Button>
+            <Button variant="outline" className="w-full justify-start" onClick={() => onViewChange('board')}>
+              <Users className="h-4 w-4 mr-2" />
+              View Project Board
+            </Button>
+            <Button variant="outline" className="w-full justify-start">
+              <Calendar className="h-4 w-4 mr-2" />
+              Schedule Meeting
+            </Button>
           </CardContent>
         </Card>
       </div>
